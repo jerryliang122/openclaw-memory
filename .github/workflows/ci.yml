@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    name: Build, unit tests & real-SDK typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit tests (includes build)
+        run: npm test
+      - name: Typecheck against real openclaw SDK types
+        run: npm run verify:host
+      - name: Package
+        run: npm pack
+      - name: Assert package contents
+        run: |
+          tgz=$(ls openclaw-memory-*.tgz)
+          tar tzf "$tgz" | grep -q 'package/openclaw.plugin.json'
+          tar tzf "$tgz" | grep -q 'package/dist/index.js'
+          tar tzf "$tgz" | grep -q 'package/assets/icon.png'
+
+  integration:
+    name: Install into real openclaw host
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build plugin tarball
+        run: |
+          npm run build
+          tgz=$(npm pack --silent)
+          echo "TGZ=${GITHUB_WORKSPACE}/${tgz}" >> "$GITHUB_ENV"
+      - name: Resolve host version from package.json
+        run: |
+          echo "HOST_VERSION=$(node -p "require('./package.json').openclaw.build.openclawVersion")" >> "$GITHUB_ENV"
+      # Full host install (~200 MB dependency tree) is CI-only; it has OOM'd
+      # memory-constrained dev machines. See AGENTS.md before changing this.
+      - name: Install full openclaw host
+        run: |
+          mkdir -p /tmp/openclaw-host
+          cd /tmp/openclaw-host
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund "openclaw@${HOST_VERSION}"
+      - name: Install plugin from npm-pack tarball
+        run: |
+          cd /tmp/openclaw-host
+          npx openclaw plugins install "npm-pack:${TGZ}" --force
+      - name: Inspect plugin runtime and assert registered tools
+        run: |
+          cd /tmp/openclaw-host
+          npx openclaw plugins inspect memory --runtime --json | tee inspect.json
+          for tool in memory_save memory_search memory_list memory_get memory_update memory_delete; do
+            grep -q "$tool" inspect.json || { echo "::error::missing tool in runtime inspection: $tool"; exit 1; }
+          done
