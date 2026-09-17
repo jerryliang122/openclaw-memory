@@ -1,0 +1,39 @@
+{
+  "id": "memory",
+  "name": "OpenClaw Memory",
+  "description": "Persistent long-term memory for OpenClaw agents: save, search, list, update and delete memories in a local file-backed store.",
+  "categories": [
+    "other"
+  ],
+  "contracts": {
+    "tools": [
+      "memory_save",
+      "memory_search",
+      "memory_list",
+      "memory_get",
+      "memory_update",
+      "memory_delete"
+    ]
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "memoryDir": {
+        "type": "string",
+        "default": "~/.openclaw/memory",
+        "description": "Directory that holds memories.json. Overridden by the OPENCLAW_MEMORY_DIR environment variable."
+      },
+      "maxSearchResults": {
+        "type": "number",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 100,
+        "description": "Upper bound on results returned by memory_search when no explicit limit is passed."
+      }
+    }
+  }
+}
