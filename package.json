@@ -17,6 +17,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/*.test.js",
     "assets": "node scripts/make-icon.mjs",
+    "install:host": "node scripts/install-host.mjs",
+    "verify:host": "npm run install:host && tsc -p tsconfig.host.json",
     "prepack": "npm run build"
   },
   "dependencies": {

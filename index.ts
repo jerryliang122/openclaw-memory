@@ -36,6 +36,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_save",
+      label: "Save memory",
       description:
         "Persist a piece of information to long-term memory so it survives across sessions. " +
         "Save stable facts, user preferences, project context or references — not volatile details. " +
@@ -63,6 +64,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_search",
+      label: "Search memories",
       description:
         "Full-text keyword search over long-term memory. Title and tag matches rank above body matches; " +
         "whole-query substring matching also covers Chinese/Japanese. Returns top scored hits with snippets.",
@@ -81,6 +83,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_list",
+      label: "List memories",
       description:
         "List all stored memories (most recently updated first), optionally narrowed to one type.",
       parameters: Type.Object({
@@ -93,6 +96,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_get",
+      label: "Get memory",
       description: "Fetch one memory by id, with full content and metadata.",
       parameters: Type.Object({
         id: Type.String({ description: "Memory id, e.g. mem_xxxxxxxx." }),
@@ -104,6 +108,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_update",
+      label: "Update memory",
       description:
         "Edit an existing memory. Only provided fields change; tags replace the previous set.",
       parameters: Type.Object({
@@ -120,6 +125,7 @@ export default definePluginEntry({
 
     api.registerTool({
       name: "memory_delete",
+      label: "Delete memory",
       description:
         "Delete a memory by id. Use when a memory turned out to be wrong or obsolete.",
       parameters: Type.Object({

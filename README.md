@@ -57,7 +57,10 @@ openclaw-memory/
 ├── test/                   # node:test 单元测试(14 个用例)
 ├── types/
 │   └── openclaw-plugin-sdk.d.ts  # SDK 最小类型声明(见下方说明)
-├── scripts/make-icon.mjs   # 生成 assets/icon.png(零图像依赖)
+├── tsconfig.host.json      # 用真实 SDK 类型编译的配置(排除 stub)
+├── scripts/
+│   ├── install-host.mjs    # types-only 宿主安装(npm pack + 解压)
+│   └── make-icon.mjs       # 生成 assets/icon.png(零图像依赖)
 └── assets/                 # icon.png(256×256)+ activity.svg(单色)
 ```
 
@@ -66,15 +69,18 @@ openclaw-memory/
 要求 Node ≥ 24.16(与 OpenClaw 插件体系一致)。
 
 ```bash
-npm install   # 只安装 typescript / @types/node / typebox
-npm test      # 编译 + 运行测试
-npm run build # 仅编译到 dist/
-npm run assets # 重新生成 icon.png
+npm install          # 只安装 typescript / @types/node / typebox
+npm test             # 编译 + 运行测试
+npm run build        # 仅编译到 dist/
+npm run verify:host  # 安装 types-only 宿主,用真实 SDK 类型重新编译(防签名漂移)
+npm run assets       # 重新生成 icon.png
 ```
+
+CI:push / PR 触发 GitHub Actions(`.github/workflows/ci.yml`),先跑构建 + 单测 + 真实 SDK 类型检查,再在完整 openclaw 宿主上做安装与运行时冒烟验证 —— 本地禁止完整安装宿主(曾导致 OOM),端到端验证交给 CI。
 
 ### 关于可选 peer 依赖 `openclaw`
 
-`openclaw` 包是插件**宿主**(含全部依赖约 200MB),已通过 `peerDependenciesMeta` 标记为可选,npm 不会在开发时自动安装。本地类型检查依赖 `types/openclaw-plugin-sdk.d.ts` 中按官方文档声明的最小 SDK 类型;对接真实 openclaw 源码开发时删除该文件即可获得完整 SDK 类型。发布产物的运行时导入路径不变,始终由宿主提供真实模块。
+`openclaw` 包是插件**宿主**(完整安装含依赖约 200MB),已通过 `peerDependenciesMeta` 标记为可选,npm 不会自动安装。日常类型检查走 `types/openclaw-plugin-sdk.d.ts` 最小声明;`npm run verify:host` 会下载宿主 tarball 做 types-only 安装(`scripts/install-host.mjs`,无生命周期脚本、无传递依赖)并排除 stub 重新编译,用于在发布前核对真实 SDK 契约(2026.9.4 上曾借此发现 `label` 必填字段的文档遗漏)。发布产物的运行时导入路径不变,始终由宿主提供真实模块。
 
 ## 发布
 

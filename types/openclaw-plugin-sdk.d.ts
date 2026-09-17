@@ -3,9 +3,9 @@
  *
  * The `openclaw` package is the plugin *host* (~200 MB with its dependency
  * tree), so it is an optional peer dependency and is NOT installed for local
- * development. This ambient declaration mirrors the documented SDK surface
- * (definePluginEntry / registerTool) so `npm run build` typechecks index.ts
- * without the host.
+ * development. This ambient declaration mirrors the SDK surface verified
+ * against openclaw@2026.9.4 (definePluginEntry / registerTool / AgentTool);
+ * run `npm run verify:host` to typecheck against the real SDK types instead.
  *
  * When developing against a real openclaw checkout, delete this file to get
  * the full SDK types from the installed package. At runtime the published
@@ -19,6 +19,8 @@ declare module "openclaw/plugin-sdk/plugin-entry" {
 
   export interface RegisteredTool {
     name: string;
+    /** Human-readable label for UI display. */
+    label: string;
     description: string;
     /** typebox Type.Object schema for the tool parameters. */
     parameters: unknown;
